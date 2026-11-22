@@ -73,12 +73,13 @@ PA4-4060-PWA/
 - **La cookie del JWT funciona igual en Vercel.** Está configurada como `httpOnly` y `secure` en producción, y Vercel sirve todo por HTTPS.
 - **Quité del log la respuesta de Express** en `app/api/auth/login/route.js`, porque imprimía el JWT completo y quedaba visible en los logs de Vercel. También quité el detalle técnico del error que se devolvía al cliente.
 - **Agregué `try/catch` en `app/solicitudes/page.js`,** igual que ya tenía la página de detalle, para que si el backend no responde se muestre un mensaje controlado y no la página de error 500.
+- **Agregué un enlace "Iniciar sesión" en la barra del inicio** (`app/page.js`). Al verificar las rutas noté que `/login` solo era accesible escribiendo la URL, lo que dificultaba revisar la aplicación desplegada.
 
 **Verificación de rutas en Vercel**
 
 | Ruta | Tipo de renderizado | Resultado esperado en Vercel |
 |---|---|---|
-| `/` | Estática | Página de inicio completa |
+| `/` | Estática | Página de inicio completa, con enlace a "Iniciar sesión" |
 | `/informacion` | SSG | Contenido completo, generado en el build |
 | `/login` | Estática | Formulario de inicio de sesión |
 | `/login` (enviar formulario) | Route Handler | Mensaje "Error durante el inicio de sesión" (no hay backend publicado) |
