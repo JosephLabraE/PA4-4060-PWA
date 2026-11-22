@@ -12,26 +12,33 @@ async function obtenerSolicitudes() {
     return { error: "No has iniciado sesión", solicitudes: [] };
   }
 
-  const response = await fetch(
-    `${process.env.API_URL}/solicitudes`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      cache: "no-store",
-    }
-  );
+  try {
+    const response = await fetch(
+      `${process.env.API_URL}/solicitudes`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+      }
+    );
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return {
+        error: response.status === 401
+          ? "Tu sesión ha expirado. Inicia sesión nuevamente."
+          : "No se pudieron obtener las solicitudes.",
+        solicitudes: [],
+      };
+    }
+
+    return await response.json();
+  } catch (error) {
     return {
-      error: response.status === 401
-        ? "Tu sesión ha expirado. Inicia sesión nuevamente."
-        : "No se pudieron obtener las solicitudes.",
+      error: "No se pudo conectar con el servidor.",
       solicitudes: [],
     };
   }
-
-  return await response.json();
 }
 
 export default async function SolicitudesPage() {
