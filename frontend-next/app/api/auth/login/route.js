@@ -23,7 +23,6 @@ export async function POST(request) {
     const data = await response.json();
 
     console.log("LOGIN EXPRESS STATUS:", response.status);
-    console.log("LOGIN EXPRESS RESPONSE:", data);
 
     if (!response.ok) {
       return NextResponse.json(
@@ -61,7 +60,6 @@ export async function POST(request) {
     return NextResponse.json(
       {
         mensaje: "Error durante el inicio de sesión",
-        detalle: error.message,
       },
       { status: 500 }
     );

@@ -6,7 +6,12 @@ export default function Home() {
     <main className="main-container">
       <nav className="navbar">
         <h2>PA4 | Gestión Académica</h2>
-        <span>Next.js</span>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+          <span>Next.js</span>
+          <Link href="/login" style={{ color: "white" }}>
+            <span>Iniciar sesión</span>
+          </Link>
+        </div>
       </nav>
 
       <section className="hero">
