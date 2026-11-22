@@ -7,7 +7,7 @@
 
 | Nombre completo | Rol | Participación |
 |---|---|---|
-| [NOMBRE COMPLETO] | React y JWT | Actividad 1: consumo de APIs y manejo de sesiones en React |
+| Joseph Mathios Labra Espinal | React y JWT | Actividad 1: consumo de APIs y manejo de sesiones en React |
 | [NOMBRE COMPLETO] | Next.js | Actividad 2: SSR, SSG y rutas dinámicas |
 | Angel Jesús Vargas Manrique | Despliegue | Actividad 3: despliegue del frontend en Vercel |
 | [NOMBRE COMPLETO] | Producción | Actividad 4: preparación de la aplicación para producción |
@@ -24,11 +24,62 @@ Demostrar el consumo de APIs y el manejo de sesiones JWT en React, la optimizaci
 
 [COMPLETAR POR EL EQUIPO: breve descripción del procedimiento seguido, actividad por actividad.]
 
+- **Actividad 1:** se reutilizó el backend Node/Express con JWT de la PA2 y se desarrolló en React (Vite) el cliente que lo consume con Axios: login, sesión, manejo de errores y validación de respuestas.
+
+
 ## Solución propuesta
+
+### Backend compartido (API de la PA2)
+
+El repositorio incluye en `backend/` la API REST de la PA2 (Node.js, Express, MongoDB/Mongoose, JWT, bcrypt, roles, CORS y helmet). En la PA4 **no se modificó**: es la fuente de datos y autenticación que consumen `frontend-react` y `frontend-next`, y ambos dependen de su formato de respuesta. Los endpoints, la estructura y las pruebas están en el [README de la PA2](https://github.com/roy-quiroz/pa2-4060). Aquí se usan `POST /auth/login`, `GET /solicitudes`, `GET /solicitudes/:id` y `POST /solicitudes`.
+
+**Alcance en la PA4:** el backend se ejecuta en local. Su despliegue (Render y MongoDB Atlas) corresponde a la Evaluación Integral.
 
 ### Actividad 1: Consumo de APIs y manejo de sesiones en React
 
-[COMPLETAR POR EL EQUIPO]
+**Responsable:** Joseph Labra
+
+**Cómo lo trabajé**
+
+1. Levanté el backend de la PA2 en local (los pasos están en «Cómo ejecutar o revisar») y lo probé en Postman antes de escribir el front: login, y `GET /solicitudes` sin token (401) y con token (200). Así supe el formato exacto de las respuestas.
+2. Creé el proyecto con `npm create vite@latest frontend-react -- --template react` e instalé Axios.
+3. Desarrollé el cliente en cuatro archivos (detalle abajo).
+4. Probé el flujo completo y los casos de error, y subí todo desde la rama `feature/react-jwt` con un Pull Request.
+
+**Estructura (`frontend-react/src`)**
+
+```text
+├── config.js        # Dirección de la API en un solo lugar
+├── App.jsx          # Estado de sesión: guarda, recupera y borra el token
+├── Login.jsx        # Formulario de login; valida que la respuesta traiga el token
+├── Solicitudes.jsx  # Lista y crea solicitudes enviando el token
+├── index.css        # Estilos
+└── main.jsx
+```
+
+**Flujo de autenticación**
+
+| Paso | Quién lo hace | Dónde |
+|---|---|---|
+| El usuario envía sus credenciales | React | `Login.jsx` |
+| El servidor las valida y genera el token | Backend (PA2) | `POST /auth/login` |
+| React guarda el token | React | `App.jsx` (`localStorage`) |
+| El token viaja en cada petición protegida | React | `Solicitudes.jsx` (`Authorization: Bearer`) |
+| El backend verifica el token | Backend (PA2) | `authMiddleware.js` |
+
+**Decisiones**
+
+- **Axios en lugar de Fetch:** la sintaxis es más corta y los errores del servidor se leen directo con `error.response`.
+- **Token en `localStorage`:** mantiene la sesión al recargar la página. Su riesgo es que cualquier script inyectado (XSS) podría leerlo; para reducirlo, el token expira en 1 hora y se borra al cerrar sesión o cuando la API responde 401. Una cookie HttpOnly, como la que usa `frontend-next`, es más segura, pero solo la puede crear el backend.
+- **Sesión al recargar:** `App.jsx` lee el token guardado al iniciar, porque React pierde su estado al recargar la página.
+- **Errores:** un 401 borra el token y vuelve al login con un aviso; otros errores muestran el mensaje de la API; si no hay conexión, aparece «No se pudo conectar con la API».
+- **Validación de respuestas:** se comprueba que el login traiga `token` y que `solicitudes` sea un arreglo antes de mostrarlo.
+
+**Problemas que encontré y cómo los resolví**
+
+- **Pantalla en blanco al arrancar:** los `import` de `App.jsx` (`./Login`, `./Solicitudes`) no coincidían con los nombres de los archivos. Los renombré con la misma mayúscula inicial.
+- **Proyecto incompleto:** instalé Axios sin haber creado antes el proyecto con Vite y faltaba React. Rehice el proyecto con `npm create vite@latest ... --template react` y luego instalé Axios.
+- **Avisos de ESLint** sobre el `useEffect` de `Solicitudes.jsx`: vienen de las reglas de la plantilla de Vite y no afectan el funcionamiento.
 
 ### Actividad 2: Optimización con Next.js: SSR, SSG y rutas dinámicas
 
@@ -101,18 +152,29 @@ El flujo completo con login, listado y detalle se demuestra en local con el back
 
 ## Cómo ejecutar o revisar
 
-**Requisitos:** Node.js 20.9 o superior y MongoDB en ejecución local.
+**Requisitos:** Node.js 20.9 o superior y MongoDB en ejecución local (`mongodb://127.0.0.1:27017`). El código del backend ya está en `backend/`, así que no hay que descargar nada aparte.
 
-**Backend** (crear `backend/.env` a partir de `backend/.env.example`):
+**1. Backend** (iniciarlo primero, porque los dos frontends lo consumen). Crear `backend/.env` a partir de `backend/.env.example`:
+
+| Variable | Valor |
+|---|---|
+| `PORT` | `3001` |
+| `MONGODB_URI` | `mongodb://127.0.0.1:27017/solicitudes_academicas` |
+| `JWT_SECRET` | Cadena aleatoria: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
+| `JWT_EXPIRES_IN` | `1h` |
+| `CORS_ORIGIN` | `http://localhost:5173` (origen de `frontend-react`) |
+| `ADMIN_NOMBRE`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` | Datos del administrador inicial (a elección) |
 
 ```bash
 cd backend
 npm install
-npm run crear-admin
+npm run crear-admin             # crea el administrador con los datos del .env
 npm run dev                     # http://localhost:3001
 ```
 
-**Frontend Next.js** (crear `frontend-next/.env.local` con `API_URL=http://localhost:3001`):
+**Usuarios para iniciar sesión:** el administrador creado arriba (ve todas las solicitudes) o un estudiante, que se registra con `POST http://localhost:3001/auth/register` en Postman: `{ "nombre": "Ana", "email": "ana@isil.pe", "password": "secreto123" }` (el estudiante solo ve las suyas). La base de datos es local, así que los usuarios hay que crearlos en cada equipo.
+
+**2. Frontend Next.js** (crear `frontend-next/.env.local` con `API_URL=http://localhost:3001`):
 
 ```bash
 cd frontend-next
@@ -121,7 +183,7 @@ npm run dev                     # http://localhost:3000
 npm run build                   # compila como en Vercel
 ```
 
-**Frontend React:**
+**3. Frontend React:**
 
 ```bash
 cd frontend-react
@@ -129,11 +191,29 @@ npm install
 npm run dev                     # http://localhost:5173
 ```
 
+
 **Versión desplegada:** [PEGAR AQUÍ LA URL DE VERCEL]
 
 ## Evidencias
 
 Las capturas de cada actividad están guardadas en la carpeta [`evidencias/`](evidencias); haz clic para verlas.
+
+**Actividad 1:**
+
+| Prueba | Resultado esperado | Evidencia |
+|---|---|---|
+| Backend en ejecución | Conecta a MongoDB y escucha en el puerto 3001 | [01-backend-corriendo.png](evidencias/actividad1/01-backend-corriendo.png) |
+| `POST /auth/login` en Postman | 200 con token JWT | [02-postman-login-200.png](evidencias/actividad1/02-postman-login-200.png) |
+| `GET /solicitudes` sin token | 401, token no proporcionado | [03-postman-solicitudes-401.png](evidencias/actividad1/03-postman-solicitudes-401.png) |
+| `GET /solicitudes` con Bearer Token | 200 con la lista | [04-postman-solicitudes-200.png](evidencias/actividad1/04-postman-solicitudes-200.png) |
+| Login con contraseña incorrecta | Mensaje de error en rojo | [05-react-login-error.png](evidencias/actividad1/05-react-login-error.png) |
+| Login correcto | Lista de solicitudes cargada desde la API | [06-react-lista.png](evidencias/actividad1/06-react-lista.png) |
+| Crear una solicitud desde el formulario | Aparece en la lista (POST con token) | [07-react-crear-solicitud.png](evidencias/actividad1/07-react-crear-solicitud.png) |
+| Local Storage tras iniciar sesión | La clave `token` está guardada | [08-react-localstorage.png](evidencias/actividad1/08-react-localstorage.png) |
+| Petición protegida en Network | Header `Authorization: Bearer` | [09-react-header-bearer.png](evidencias/actividad1/09-react-header-bearer.png) |
+| Token alterado y recarga (F5) | Vuelve al login con aviso | [10-react-token-invalido.png](evidencias/actividad1/10-react-token-invalido.png) |
+| Backend apagado y Actualizar | «No se pudo conectar con la API» | [11-react-api-caida.png](evidencias/actividad1/11-react-api-caida.png) |
+| Cerrar sesión | El token se elimina de Local Storage | [12-react-logout.png](evidencias/actividad1/12-react-logout.png) |
 
 **Actividad 3:**
 
@@ -145,7 +225,13 @@ Las capturas de cada actividad están guardadas en la carpeta [`evidencias/`](ev
 
 ## Conclusiones
 
+**Actividad 1:** consumir la API con Axios y validar cada respuesta (estado, formato y errores de red) permitió que la aplicación fallara de forma controlada y mostrara mensajes claros. Guardar el token en el cliente y enviarlo con `Authorization: Bearer` mantiene la sesión sin que el servidor guarde estado, aunque `localStorage` es vulnerable a XSS; una cookie HttpOnly, como la de `frontend-next`, es más segura.
+
+**Actividad 2:**
+
 **Actividad 3:** desplegar en Vercel permite revisar la aplicación fuera del entorno local y ver cómo se comporta cada tipo de renderizado: las páginas estáticas y SSG se sirven completas desde el build, mientras que las SSR dependen del backend en cada petición. Manejar la URL del backend como variable de entorno del servidor deja la aplicación lista para conectarse al backend publicado en la Evaluación Integral sin cambiar el código.
+
+**Actividad 4:**
 
 [AGREGAR CONCLUSIONES GENERALES DEL EQUIPO Y LA RELACIÓN CON LOS CONTENIDOS DE LAS SESIONES 11 A 13]
 
