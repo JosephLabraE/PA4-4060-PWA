@@ -1,6 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  reactStrictMode: true,
+  compress: true,
+  poweredByHeader: false,
+  productionBrowserSourceMaps: false,
+  compiler: {
+    // Quita console.log y console.debug en producción; conserva info, warn y error
+    removeConsole:
+      process.env.NODE_ENV === "production"
+        ? { exclude: ["info", "warn", "error"] }
+        : false,
+  },
   turbopack: {
     rules: {
       "*.css": {

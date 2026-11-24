@@ -1,12 +1,11 @@
-
 import { NextResponse } from "next/server";
+import { logger } from "../../../../lib/logger";
 
 export async function POST(request) {
   try {
     const { email, password } = await request.json();
 
-    console.log("LOGIN NEXT: iniciando petición");
-    console.log("API_URL:", process.env.API_URL);
+    logger.info("Login: iniciando petición hacia el backend");
 
     const response = await fetch(
       `${process.env.API_URL}/auth/login`,
@@ -22,9 +21,10 @@ export async function POST(request) {
 
     const data = await response.json();
 
-    console.log("LOGIN EXPRESS STATUS:", response.status);
+    logger.info("Login: respuesta del backend", `status ${response.status}`);
 
     if (!response.ok) {
+      logger.warn("Login: credenciales rechazadas", `status ${response.status}`);
       return NextResponse.json(
         {
           mensaje: data.mensaje || "Error al iniciar sesión",
@@ -52,10 +52,12 @@ export async function POST(request) {
       maxAge: 60 * 60,
     });
 
+    logger.info("Login: sesión creada correctamente");
+
     return result;
 
   } catch (error) {
-    console.error("ERROR EN LOGIN NEXT.JS:", error);
+    logger.error("Login: error durante el inicio de sesión", error.message);
 
     return NextResponse.json(
       {
