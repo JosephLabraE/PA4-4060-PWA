@@ -8,7 +8,7 @@
 | Nombre completo | Rol | Participación |
 |---|---|---|
 | Joseph Mathios Labra Espinal | React y JWT | Actividad 1: consumo de APIs y manejo de sesiones en React |
-| [NOMBRE COMPLETO] | Next.js | Actividad 2: SSR, SSG y rutas dinámicas |
+| Roy Giovanni Quiroz Morales | Next.js | Actividad 2: SSR, SSG y rutas dinámicas |
 | Angel Jesús Vargas Manrique | Despliegue | Actividad 3: despliegue del frontend en Vercel |
 | [NOMBRE COMPLETO] | Producción | Actividad 4: preparación de la aplicación para producción |
 
@@ -83,7 +83,115 @@ El repositorio incluye en `backend/` la API REST de la PA2 (Node.js, Express, Mo
 
 ### Actividad 2: Optimización con Next.js: SSR, SSG y rutas dinámicas
 
-[COMPLETAR POR EL EQUIPO]
+**Responsable:** Roy Quiroz
+
+**Cómo lo trabajé**
+
+1. Revisé la estructura del proyecto y adapté el frontend con Next.js dentro de `frontend-next`. También revisé cómo se comunica con el backend de la PA2, desarrollado con Express y conectado a MongoDB.
+2. Organicé las vistas utilizando el **App Router** de Next.js. Separé la página informativa, el listado de solicitudes y el detalle de cada solicitud.
+3. Implementé **SSG** en la vista de información, porque presenta contenido general que no necesita consultarse nuevamente en la API cada vez que ingresa un usuario.
+4. Implementé **SSR** en el listado de solicitudes. La página lee la cookie de sesión en el servidor y consulta la API enviando el JWT, para obtener información actualizada y protegida.
+5. Creé la ruta dinámica `/solicitudes/[id]` para consultar el detalle de cada solicitud según su identificador.
+6. Integré el inicio de sesión mediante un Route Handler de Next.js. Este recibe las credenciales, las reenvía al backend y guarda el JWT en una cookie `HttpOnly`.
+7. Organicé el proyecto para ejecutar y comprobar las vistas desde el navegador, con el backend y MongoDB en funcionamiento.
+
+**Estructura (`frontend-next`)**
+
+```text
+frontend-next/
+├── app/
+│   ├── api/
+│   │   └── auth/
+│   │       └── login/
+│   │           └── route.js       # Procesa el login y guarda el JWT
+│   ├── informacion/
+│   │   └── page.js                # Vista estática mediante SSG
+│   ├── login/
+│   │   └── page.js                # Página de acceso
+│   ├── solicitudes/
+│   │   ├── [id]/
+│   │   │   └── page.js            # Detalle mediante ruta dinámica
+│   │   └── page.js                # Listado de solicitudes mediante SSR
+│   ├── globals.css                # Estilos generales
+│   ├── layout.js                  # Layout principal y metadatos
+│   └── page.js                    # Página de inicio
+├── components/
+│   └── LoginForm.jsx              # Formulario de inicio de sesión
+├── package.json
+└── next.config.mjs
+```
+
+**Implementación de SSR, SSG y rutas dinámicas**
+
+| Vista | Archivo | Ruta | Implementación |
+|---|---|---|---|
+| Información | `app/informacion/page.js` | `/informacion` | SSG |
+| Listado de solicitudes | `app/solicitudes/page.js` | `/solicitudes` | SSR |
+| Detalle de solicitud | `app/solicitudes/[id]/page.js` | `/solicitudes/:id` | SSR + ruta dinámica |
+
+- **SSG en `/informacion`:** en `app/informacion/page.js` utilicé `export const dynamic = "force-static"`. Next.js genera esta página de forma estática. Es apropiado porque presenta información general del sistema que no depende de la sesión ni necesita consultar datos variables en cada visita.
+- **SSR en `/solicitudes`:** en `app/solicitudes/page.js` utilicé `export const dynamic = "force-dynamic"`. La página lee la cookie `token` con `cookies()` de `next/headers`, consulta `${process.env.API_URL}/solicitudes` y envía el JWT mediante `Authorization: Bearer`. La petición utiliza `cache: "no-store"` para evitar reutilizar una respuesta almacenada.
+- **Ruta dinámica `/solicitudes/[id]`:** el segmento `[id]` permite mostrar el detalle de diferentes solicitudes desde un mismo archivo. La página recibe el identificador mediante `params` y consulta `/solicitudes/${id}` en el backend, utilizando el token de sesión. Si la consulta falla o no se encuentra el registro, muestra el mensaje correspondiente.
+
+**Flujo de autenticación**
+
+| Paso | Quién lo hace | Dónde |
+|---|---|---|
+| El usuario ingresa correo y contraseña | Formulario de Next.js | `components/LoginForm.jsx` |
+| El formulario envía las credenciales | Next.js | `POST /api/auth/login` |
+| Next.js reenvía las credenciales | Route Handler | `app/api/auth/login/route.js` |
+| El backend valida al usuario y genera el JWT | Backend (PA2) | `POST /auth/login` |
+| Next.js guarda el JWT en una cookie `HttpOnly` | Next.js | `app/api/auth/login/route.js` |
+| Las páginas protegidas leen la cookie | Next.js | Páginas de solicitudes |
+| El backend verifica el JWT | Backend (PA2) | Middleware de autenticación |
+
+**Decisiones**
+
+- **SSG para `/informacion`:** elegí generación estática porque es contenido general y estable. No requiere información personalizada ni una consulta a la base de datos en cada visita.
+- **SSR para `/solicitudes`:** elegí renderizado en el servidor porque el listado depende de datos actuales y de la identidad del usuario autenticado.
+- **SSR para el detalle dinámico:** cada solicitud tiene un identificador y sus datos se obtienen desde la API. Una ruta dinámica evita crear manualmente una página para cada registro.
+- **`force-dynamic` y `cache: "no-store"`:** se utilizan en el listado y el detalle para que las páginas y sus consultas no dependan de contenido almacenado.
+- **Cookie `HttpOnly`:** el JWT se guarda desde el Route Handler con `httpOnly`, `sameSite: "lax"` y una duración de una hora. Así, el JavaScript del navegador no puede leer directamente el token.
+- **Route Handler para el login:** el formulario envía las credenciales a `/api/auth/login`; Next.js realiza la comunicación con Express y establece la cookie de sesión.
+
+**Cómo ejecutar o revisar**
+
+Con MongoDB y el backend de la PA2 en ejecución, crear `frontend-next/.env.local` con:
+
+```env
+API_URL=http://localhost:3001
+```
+
+Desde la carpeta `frontend-next`, ejecutar:
+
+```bash
+npm install
+npm run dev
+```
+
+Abrir `http://localhost:3000`. Para comprobar la compilación de producción:
+
+```bash
+npm run build
+npm start
+```
+
+**Pruebas de funcionamiento**
+
+1. Iniciar MongoDB y el backend Express.
+2. Iniciar Next.js y abrir `http://localhost:3000`.
+3. Ingresar a `/informacion` y comprobar que se muestra el contenido informativo.
+4. Ingresar a `/login` y probar el inicio de sesión con un usuario registrado en el backend.
+5. Después de iniciar sesión, comprobar que se abre `/solicitudes` y se carga el listado.
+6. Seleccionar **Ver detalle** en una solicitud y comprobar que la dirección cambia a `/solicitudes/<id>`.
+7. Probar el acceso al listado sin una sesión válida y comprobar que aparece el mensaje correspondiente.
+
+**Problemas y aspectos que tuve en cuenta**
+
+- **La vista de solicitudes depende de la sesión:** si no existe la cookie `token`, la página no realiza la consulta protegida y muestra el aviso de inicio de sesión.
+- **La API puede responder con error:** el listado y el detalle contemplan respuestas HTTP no exitosas y muestran mensajes cuando no se pueden obtener los datos.
+- **El detalle necesita un identificador válido:** la ruta dinámica consulta `/solicitudes/:id`; si el backend no encuentra el registro o el usuario no tiene permiso, se muestra el mensaje recibido desde la API.
+- **Configuración de la dirección del backend:** las páginas utilizan `process.env.API_URL`. Por eso, es necesario definir esa variable en `.env.local` para las pruebas locales.
 
 ### Actividad 3: Despliegue del frontend en Vercel
 
