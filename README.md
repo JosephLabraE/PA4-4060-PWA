@@ -10,7 +10,7 @@
 | Joseph Mathios Labra Espinal | React y JWT | Actividad 1: consumo de APIs y manejo de sesiones en React |
 | Roy Giovanni Quiroz Morales | Next.js | Actividad 2: SSR, SSG y rutas dinámicas |
 | Angel Jesús Vargas Manrique | Despliegue | Actividad 3: despliegue del frontend en Vercel |
-| [NOMBRE COMPLETO] | Producción | Actividad 4: preparación de la aplicación para producción |
+| Ayrton Mihail Palomino Loli | Producción | Actividad 4: preparación de la aplicación para producción |
 
 ## Descripción
 
@@ -25,6 +25,7 @@ Demostrar el consumo de APIs y el manejo de sesiones JWT en React, la optimizaci
 [COMPLETAR POR EL EQUIPO: breve descripción del procedimiento seguido, actividad por actividad.]
 
 - **Actividad 1:** se reutilizó el backend Node/Express con JWT de la PA2 y se desarrolló en React (Vite) el cliente que lo consume con Axios: login, sesión, manejo de errores y validación de respuestas.
+- **Actividad 4:** sobre el proyecto `frontend-next` se configuró la compilación de producción en `next.config.mjs` (compresión, sin source maps y eliminación de `console.log`), se separó la configuración por entorno con archivos `.env.*`, se creó un logger con niveles y se activó el monitoreo con Vercel Analytics y Speed Insights.
 
 
 ## Solución propuesta
@@ -256,7 +257,13 @@ El flujo completo con login, listado y detalle se demuestra en local con el back
 
 ### Actividad 4: Preparación para producción
 
-[COMPLETAR POR EL EQUIPO]
+**Responsable:** Ayrton Mihail Palomino Loli. La documentación completa y las capturas están en [`evidencias/actividad4/readme.md`](evidencias/actividad4/readme.md).
+
+1. **Minificación y optimización.** `next build` minifica el código; en `next.config.mjs` se activó `compress`, se desactivaron `poweredByHeader` y los source maps de producción, y `compiler.removeConsole` elimina los `console.log` en producción conservando `info`, `warn` y `error`.
+2. **Webpack y Babel.** Next.js 16 usa Turbopack (sucesor de Webpack) y SWC (reemplazo de Babel). No se creó un `.babelrc`, porque desactivaría SWC, ni un bloque `webpack`, porque con Turbopack daría error de build. La configuración de bundler del proyecto es `turbopack.rules` para Tailwind.
+3. **Variables de entorno.** Se agregaron `.env.example`, `.env.development` y `.env.production` con valores no sensibles; `.env.local` y `API_URL` quedan fuera de Git. `API_URL` no lleva el prefijo `NEXT_PUBLIC_`, por lo que solo la lee el servidor. En producción se configura en Vercel.
+4. **Logs.** `lib/logger.js` ofrece los niveles `info`, `warn` y `error` con fecha y hora, y se aplicó en el login sin registrar datos sensibles.
+5. **Monitoreo.** Se agregaron `@vercel/analytics` y `@vercel/speed-insights` en `app/layout.js`. Las capturas provienen de un despliegue propio del mismo código, porque el plan gratuito de Vercel no permite invitar colaboradores al proyecto del equipo.
 
 ## Cómo ejecutar o revisar
 
@@ -331,6 +338,23 @@ Las capturas de cada actividad están guardadas en la carpeta [`evidencias/`](ev
 - [Captura de cada ruta de la tabla de verificación]
 - [Captura de los Runtime Logs de Vercel]
 
+**Actividad 4:**
+
+| Prueba | Resultado esperado | Evidencia |
+|---|---|---|
+| Build sin cambios | Compila y lista las rutas estáticas y dinámicas | [01-build-antes.png](evidencias/actividad4/01-build-antes.png) |
+| Build con la configuración de producción | Compila sin errores | [02-build-despues.png](evidencias/actividad4/02-build-despues.png) |
+| `npm run dev` | Carga `.env.local` y `.env.development`; el pie de página dice «Entorno: desarrollo» | [03-env-desarrollo.png](evidencias/actividad4/03-env-desarrollo.png) |
+| Build de producción local | Carga `.env.production` | [05-build-produccion.png](evidencias/actividad4/05-build-produccion.png) |
+| Intento de login en local | Líneas `[INFO]` y `[ERROR]` en la terminal | [04-logs-local.png](evidencias/actividad4/04-logs-local.png) |
+| Variables en Vercel | `API_URL` configurada, valor oculto | [10-env-vars-vercel.png](evidencias/actividad4/10-env-vars-vercel.png) |
+| Build en Vercel | Carga `.env.production` | [12-build-logs-vercel.png](evidencias/actividad4/12-build-logs-vercel.png) |
+| Runtime Logs en Vercel | Líneas del logger en producción | [09-runtime-logs-vercel.png](evidencias/actividad4/09-runtime-logs-vercel.png) |
+| Speed Insights | Real Experience Score de 100 | [07-speed-insights.png](evidencias/actividad4/07-speed-insights.png) |
+| Analytics | Visitantes y páginas vistas | [08-analytics.png](evidencias/actividad4/08-analytics.png) |
+| Despliegues | Despliegues en estado Ready | [11-deployments.png](evidencias/actividad4/11-deployments.png) |
+| Pull Request | Checks en verde | [06-pull-request.png](evidencias/actividad4/06-pull-request.png) |
+
 ## Conclusiones
 
 **Actividad 1:** consumir la API con Axios y validar cada respuesta (estado, formato y errores de red) permitió que la aplicación fallara de forma controlada y mostrara mensajes claros. Guardar el token en el cliente y enviarlo con `Authorization: Bearer` mantiene la sesión sin que el servidor guarde estado, aunque `localStorage` es vulnerable a XSS; una cookie HttpOnly, como la de `frontend-next`, es más segura.
@@ -339,9 +363,7 @@ Las capturas de cada actividad están guardadas en la carpeta [`evidencias/`](ev
 
 **Actividad 3:** desplegar en Vercel permite revisar la aplicación fuera del entorno local y ver cómo se comporta cada tipo de renderizado: las páginas estáticas y SSG se sirven completas desde el build, mientras que las SSR dependen del backend en cada petición. Manejar la URL del backend como variable de entorno del servidor deja la aplicación lista para conectarse al backend publicado en la Evaluación Integral sin cambiar el código.
 
-**Actividad 4:**
-
-[AGREGAR CONCLUSIONES GENERALES DEL EQUIPO Y LA RELACIÓN CON LOS CONTENIDOS DE LAS SESIONES 11 A 13]
+**Actividad 4:** preparar la aplicación para producción no consiste en escribir lógica nueva, sino en controlar cómo se compila, qué configuración recibe y qué se puede observar de ella. De la sesión 13 se aplicó la minificación y la compresión, y se comprobó que en Next.js 16 las funciones de Webpack y Babel las cubren Turbopack y SWC integrados. También se separó la configuración por entorno con archivos `.env`, igual que se vio con las variables `NEXT_PUBLIC_`, y se mantuvo la URL del backend como variable de servidor para no exponerla en el navegador. Los logs con niveles y el monitoreo con Vercel Analytics y Speed Insights permiten detectar fallos, como el error de conexión al backend que se ve en los Runtime Logs, sin revisar el código. Esto se articula con las sesiones 11 y 12: la misma variable `API_URL` que usa el login con JWT es la que se configura en Vercel al desplegar la aplicación con SSR y SSG.
 
 ## Video de exposición
 
