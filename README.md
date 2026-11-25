@@ -25,6 +25,7 @@ Demostrar el consumo de APIs y el manejo de sesiones JWT en React, la optimizaci
 [COMPLETAR POR EL EQUIPO: breve descripción del procedimiento seguido, actividad por actividad.]
 
 - **Actividad 1:** se reutilizó el backend Node/Express con JWT de la PA2 y se desarrolló en React (Vite) el cliente que lo consume con Axios: login, sesión, manejo de errores y validación de respuestas.
+- **Actividad 3:** se desplegó `frontend-next` en Vercel conectando el repositorio de GitHub con `frontend-next` como Root Directory y la variable de servidor `API_URL`; se ajustó el login para no registrar el JWT, se agregó manejo de errores de conexión en `/solicitudes` y un enlace a «Iniciar sesión» en el inicio, y se verificaron las rutas en la URL pública.
 - **Actividad 4:** sobre el proyecto `frontend-next` se configuró la compilación de producción en `next.config.mjs` (compresión, sin source maps y eliminación de `console.log`), se separó la configuración por entorno con archivos `.env.*`, se creó un logger con niveles y se activó el monitoreo con Vercel Analytics y Speed Insights.
 
 
@@ -366,4 +367,4 @@ Las capturas de cada actividad están guardadas en la carpeta [`evidencias/`](ev
 
 ## Video de exposición
 
-**Video público de YouTube:** [PEGAR AQUÍ EL ENLACE]
+**Video público de YouTube:** https://www.youtube.com/watch?v=NJLOFV9qrV4
