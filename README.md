@@ -198,7 +198,7 @@ npm start
 
 **Responsable:** Angel Vargas
 
-**URL pública:** [PEGAR AQUÍ LA URL DE VERCEL]
+**URL pública:** [https://pa4-4060-pwa-frontend-next.vercel.app/](https://pa4-4060-pwa-frontend-next.vercel.app/)
 
 **Cómo lo trabajé**
 
@@ -307,7 +307,7 @@ npm run dev                     # http://localhost:5173
 ```
 
 
-**Versión desplegada:** [PEGAR AQUÍ LA URL DE VERCEL]
+**Versión desplegada:** [https://pa4-4060-pwa-frontend-next.vercel.app/](https://pa4-4060-pwa-frontend-next.vercel.app/)
 
 ## Evidencias
 
@@ -332,11 +332,10 @@ Las capturas de cada actividad están guardadas en la carpeta [`evidencias/`](ev
 
 **Actividad 3:**
 
-- [Captura del proyecto importado con Root Directory `frontend-next`]
-- [Captura del log de build en Vercel]
-- [Captura de las variables de entorno (valor oculto)]
-- [Captura de cada ruta de la tabla de verificación]
-- [Captura de los Runtime Logs de Vercel]
+| Prueba | Resultado esperado | Evidencia |
+|---|---|---|
+| Página de inicio | Enlace «Iniciar sesión» en la barra de navegación | [01-local-inicio-boton-login.png](evidencias/actividad3/01-local-inicio-boton-login.png) |
+| Detalle de solicitud con el backend apagado | «No se pudo conectar con el servidor.» sin página de error | [02-local-detalle-backend-apagado.png](evidencias/actividad3/02-local-detalle-backend-apagado.png) |
 
 **Actividad 4:**
 
